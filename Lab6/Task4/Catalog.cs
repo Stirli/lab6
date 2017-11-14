@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace Lab6.Task4
 {
@@ -91,7 +92,8 @@ namespace Lab6.Task4
 
         public IEnumerable<Song> FindSongs(string artistName)
         {
-            return EnumerateSongs().Where(song => song.Artist.Equals(artistName)).ToList();
+            Regex reg = new Regex(artistName);
+            return EnumerateSongs().Where(song => reg.IsMatch(song.Artist)).ToList();
         }
         #endregion
     }
