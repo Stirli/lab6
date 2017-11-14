@@ -7,19 +7,13 @@ namespace Lab6.Task4
 {
     public class Catalog
     {
-        // Можно в один Hashtable хранить список списков(дисков) песен. Или список спиков(песен) дисков
-        // Т.е. мы емеем свзяь многие-ко-многим. И искать нам нужно как по песням (которые могут дублироваться на несколько дисков),
-        // так и по дискам. Поэтому делаем подобие реляционной бд на основе Hashtable. 
-        // В качестве ключа будет использоваться строка, содержащая название диска. В качестве значения - список песен на этом диске.
+     
+        // Ключ - название диска. 
         private readonly Hashtable _disks;
-
-        // Список песен
-        private readonly ICollection<Song> _songs;
 
         public Catalog()
         {
             _disks = new Hashtable();
-            _songs = new List<Song>();
         }
         #region Disk
 
@@ -37,36 +31,9 @@ namespace Lab6.Task4
         // Удалить диск.
         public void RemoveDisk(string name)
         {
-            // Удаление диска не приведет к удалению песен из каталога, если они были только на этом диске.
             _disks.Remove(name);
         }
-        // Добавляет песню на диск.
-        public void AddSongToDisk(string disk, Song song)
-        {
-            // Проверяем наличие песни в каталоге.
-            if (!_songs.Contains(song))
-            {
-                throw new ArgumentException("Песня не найдена", "song");
-            }
 
-            // Наличие диска в каталоге.
-            if (!_disks.Contains(disk))
-            {
-                throw new ArgumentException("Диск не найден", "disk");
-            }
-
-            // Получаем список песен на диске.
-            ICollection<Song> diskSongs = _disks[disk] as ICollection<Song>;
-
-            // Если песени нет на диске
-            if (diskSongs.Contains(song))
-            {
-                throw new ArgumentException("Песня" + song + " уже добавлена на этот диск " + disk, "song");
-            }
-
-            // Добавляем песню на диск
-            diskSongs.Add(song);
-        }
 
         public IEnumerable<string> EnumerateDisks()
         {
@@ -86,39 +53,45 @@ namespace Lab6.Task4
         #region Catalog
 
         // Добавляет песню в каталог.
-        public void AddSong(Song song)
+        public void AddSong(Song song, string disk)
         {
-            if (_songs.Contains(song))
-                throw new ArgumentException("Песня уже существует", "song");
-            _songs.Add(song);
+
+            // Наличие диска в каталоге.
+            if (!_disks.Contains(disk))
+            {
+                throw new ArgumentException("Диск не найден", "disk");
+            }
+
+            // Получаем список песен на диске.
+            ICollection<Song> diskSongs = _disks[disk] as ICollection<Song>;
+
+            // Если песеня уже есть на диске
+            if (diskSongs.Contains(song))
+            {
+                throw new ArgumentException("Песня" + song + " уже добавлена на этот диск " + disk, "song");
+            }
+            // Добавляем песню на диск
+            diskSongs.Add(song);
         }
 
-        // Удаляет песню из каталога. cascade - песня будет удалена со всех дисков.
-        public void RemoveSong(Song song, bool cascade = false)
+        //todo
+        // Удаляет песню из каталога.
+        public void RemoveSong(Song song, string disk)
         {
-            _songs.Remove(song);
-            if (!cascade)
-            {
-                return;
-            }
-
-            IEnumerable<ICollection<Song>> lists = _disks.Values.Cast<ICollection<Song>>();
-            foreach (ICollection<Song> list in lists)
-            {
-                list.Remove(song);
-            }
+            ICollection<Song> diskSongs = _disks[disk] as ICollection<Song>;
+            diskSongs.Remove(song);
         }
 
 
         // Список песен в каталоге
-        public IEnumerable<Song> EnumerateCatalog()
+        public IEnumerable<Song> EnumerateSongs()
         {
-            return _songs;
+            return _disks.Values.Cast<ICollection<Song>>().SelectMany(songs => songs).Distinct();
         }
 
         public IEnumerable<Song> FindSongs(string artistName)
         {
-            return _songs.Where(song => song.Artist.Equals(artistName));
+            return EnumerateSongs().Where(song => song.Artist.Equals(artistName)).ToList();
         }
         #endregion
     }

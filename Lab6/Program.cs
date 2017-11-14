@@ -3,8 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Lab6.Task4;
 
 namespace Lab6
@@ -68,6 +66,7 @@ namespace Lab6
             {
                 Console.WriteLine(obj);
             }
+
             Console.WriteLine("---");
         }
 
@@ -111,7 +110,7 @@ namespace Lab6
 
             IEnumerable<Employee> employees = File.ReadLines("employes.txt").Select(Employee.Parse);
 
-            //  
+
             foreach (Employee employee in employees)
             {
                 if (employee.Age < 30)
@@ -142,13 +141,30 @@ namespace Lab6
         {
             // Создаем пустой каталог
             Catalog catalog = new Catalog();
+
+            // Создаем диски
+            for (int i = 0; i < 5; i++)
+            {
+                catalog.AddDisk("Disk " + i);
+            }
+
+            // Создаем песни и добавляем их на диски
+            // Создаем массив, т.к. если оставить IEnumerable, то получение элемента по индексу каждый раз будет вызывать перечисление
+            string[] disks = catalog.EnumerateDisks().OrderBy(s => s).ToArray();
+            int songsPerDisk = 5;
+            for (int i = 0; i < disks.Length * songsPerDisk; i++)
+            {
+                Song song = new Song { Artist = "Artist " + i % songsPerDisk, Name = "Song " + i };
+                catalog.AddSong(disks[i % songsPerDisk], song);
+            }
+
             while (true)
             {
                 // Меню
-                int i = SelectItem(
-                    new[] {"Добавить диск", "Удалить диск", "Добавить песню", "Удалить песню", "Содержимое каталога"},
+                int select = SelectItem(
+                    new[] { "Добавить диск", "Удалить диск", "Добавить песню", "Удалить песню", "Содержимое каталога"},
                     "Главное меню");
-                switch (i)
+                switch (select)
                 {
                     case 0:
                         AddDisk(catalog);
@@ -160,9 +176,23 @@ namespace Lab6
                         AddSong(catalog);
                         break;
                     case 3:
+                        // Все песни
+                        List<Song> allsongs = catalog.EnumerateSongs().ToList();
+                        // Выбираем песню
+                        int songI = SelectItem(allsongs, "Удаление песни");
+                        catalog.RemoveSong(allsongs[songI]);
                         break;
                     case 4:
-                        Print(catalog.EnumerateCatalog());
+                        IEnumerable<string> sortedDisks = catalog.EnumerateDisks().OrderBy(s => s);
+                        foreach (string disk in sortedDisks)
+                        {
+                            Console.WriteLine(disk);
+                            IEnumerable<Song> songs = catalog.EnumerateDisk(disk);
+                            foreach (Song song in songs)
+                            {
+                                Console.WriteLine("\t" + song);
+                            }
+                        }
                         break;
                 }
             }
