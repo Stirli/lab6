@@ -8,7 +8,7 @@ namespace Lab6.Task4
 {
     public class Catalog
     {
-     
+
         // Ключ - название диска. 
         private readonly Hashtable _disks;
 
